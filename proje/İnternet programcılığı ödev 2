@@ -1,0 +1,139 @@
+<?php
+session_start();
+
+/* --------------------------------------------------------------------------
+   Kullanıcı Bilgileri
+   -------------------------------------------------------------------------- */
+// Admin kullanıcı
+$admin_user = "admin";
+$admin_pass = "123";
+
+// Normal kullanıcı
+$user_user = "user";
+$user_pass = "123";
+
+/* --------------------------------------------------------------------------
+   GİRİŞ KONTROLÜ
+   -------------------------------------------------------------------------- */
+if (isset($_POST['login'])) {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    // Admin girişi
+    if ($username === $admin_user && $password === $admin_pass) {
+        $_SESSION['login'] = true;
+        $_SESSION['role'] = "admin";
+        header("Location: ?page=index");
+        exit;
+    }
+
+    // Normal kullanıcı girişi
+    if ($username === $user_user && $password === $user_pass) {
+        $_SESSION['login'] = true;
+        $_SESSION['role'] = "user";
+        header("Location: ?page=index");
+        exit;
+    }
+
+    $error = "Kullanıcı adı veya şifre hatalı!";
+}
+
+/* --------------------------------------------------------------------------
+   ÇIKIŞ
+   -------------------------------------------------------------------------- */
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header("Location: ?");
+    exit;
+}
+
+/* --------------------------------------------------------------------------
+   SAYFA YÖNLENDİRME
+   -------------------------------------------------------------------------- */
+$page = $_GET['page'] ?? "login";
+
+/* --------------------------------------------------------------------------
+   LOGIN SAYFASI
+   -------------------------------------------------------------------------- */
+if ($page === "login"):
+?>
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Login</title></head>
+<body>
+<h2>Giriş Yap</h2>
+
+<?php if (!empty($error)) echo "<p style='color:red;'>$error</p>"; ?>
+
+<form method="post">
+    Kullanıcı Adı: <input type="text" name="username"><br><br>
+    Şifre: <input type="password" name="password"><br><br>
+    <button type="submit" name="login">Giriş Yap</button>
+</form>
+
+</body>
+</html>
+<?php
+exit;
+endif;
+
+/* --------------------------------------------------------------------------
+   YETKİ KONTROL
+   -------------------------------------------------------------------------- */
+if (!isset($_SESSION['login'])) {
+    header("Location: ?page=login");
+    exit;
+}
+
+/* --------------------------------------------------------------------------
+   INDEX SAYFASI
+   -------------------------------------------------------------------------- */
+if ($page === "index"):
+?>
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Index</title></head>
+<body>
+
+<h2>Index Sayfası</h2>
+<p>Hoş geldiniz, <strong><?= $_SESSION['role']; ?></strong> kullanıcısı!</p>
+
+<a href="?page=detay">Detay Sayfasına Git</a><br><br>
+<a href="?logout=1">Çıkış Yap</a>
+
+</body>
+</html>
+<?php
+exit;
+endif;
+
+/* --------------------------------------------------------------------------
+   DETAY SAYFASI – SADECE ADMIN GÖREBİLİR
+   -------------------------------------------------------------------------- */
+if ($page === "detay") {
+
+    if ($_SESSION['role'] !== "admin") {
+        // Yetkisi olmayan kullanıcı buraya erişirse uyarı verilecek
+        echo "<script>alert('Yetkiniz bulunmamaktadır!');</script>";
+        header("Refresh:0; url=?page=index");
+        exit;
+    }
+
+    // Admin detay sayfası
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>Detay</title></head>
+    <body>
+
+    <h2>Detay Sayfası (Sadece Admin)</h2>
+    <p>Bu sayfayı yalnızca admin görebilir.</p>
+
+    <a href="?page=index">Geri dön</a>
+
+    </body>
+    </html>
+    <?php
+    exit;
+}
+?>
